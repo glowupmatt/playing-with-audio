@@ -1,5 +1,7 @@
+"use client";
+
 import Wavesurfer from "wavesurfer.js";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import { Region } from "wavesurfer.js/dist/plugins/regions.esm.js";
 import TimelinePlugin from "wavesurfer.js/dist/plugins/timeline.esm.js";
@@ -21,6 +23,8 @@ const Waveform = () => {
     }
     return `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.4)`;
   };
+  const [duration, setDuration] = useState<number | null>(null);
+
   useEffect(() => {
     //Here we are checking if the waveformRef is not null
     if (waveformRef.current) {
@@ -56,13 +60,14 @@ const Waveform = () => {
           end: 8,
           content: "Resize me & drag me!",
           color: randomColor(),
-          drag: true,
+          drag: false,
           resize: true,
         });
       });
       wsRegions.enableDragSelection({
         color: "rgba(255, 0, 0, 0.1)",
       });
+
       // Loop a region on click this is a true or false value that will be toggled by the checkbox
       let loop = true;
       // Toggle looping with a checkbox
@@ -113,8 +118,6 @@ const Waveform = () => {
     <div>
       <div id="waveform" ref={waveformRef} className="flex flex-col gap-5" />
       <button onClick={playAudio}>Play/Pause</button>
-      <audio id="audio" src={url} />
-      <div className="flex gap-3" />
     </div>
   );
 };
