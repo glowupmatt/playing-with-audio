@@ -22,6 +22,7 @@ const RefactoredWaveform = ({ url = "sounds/sound3.wav" }) => {
     setAudioMaxLength
   );
 
+  const [leftTrack, setLeftTrack] = useState("");
   useEffect(() => {
     if (waveform.current === null) {
       waveform.current = Wavesurfer.create({
@@ -45,13 +46,28 @@ const RefactoredWaveform = ({ url = "sounds/sound3.wav" }) => {
   };
 
   useEffect(() => {
+    const canvasMap = new Map();
+    const regionMap = new Map();
     const processChildren = (children: HTMLCollection) => {
       Array.from(children)
         .filter((child) => child.querySelector("div"))
         .forEach((child) => {
-          const canvasChildren = child.children;
-          console.log(canvasChildren);
+          const parentDiv = child.children;
+          canvasMap.set("innerHTML", parentDiv[0].children[0]);
+          regionMap.set("innerHTML", parentDiv[0].children[3]);
         });
+      Array.from(canvasMap).forEach(([key, value]) => {
+        if (value instanceof HTMLElement) {
+          value.style.opacity = "0.5";
+        }
+      });
+      Array.from(regionMap).forEach(([key, value]) => {
+        if (value instanceof HTMLElement) {
+          const leftValue = value.style.left;
+          console.log(value.style.right, "right");
+          setLeftTrack(leftValue);
+        }
+      });
     };
 
     const waveformDiv = document.getElementById("waveform");
@@ -62,7 +78,8 @@ const RefactoredWaveform = ({ url = "sounds/sound3.wav" }) => {
         processChildren(shadowRoot.children);
       }
     }
-  }, []);
+  }, [leftTrack]);
+  console.log(leftTrack, "leftTrack");
 
   return (
     <div>
