@@ -1,7 +1,6 @@
 import useWaveform from "@/hooks/useWaveForm";
 import { useState, useEffect, useRef } from "react";
-import TimelinePlugin from "wavesurfer.js/dist/plugins/timeline.esm.js";
-import { cut } from "@/utils/waveSurferOperations";
+import Wavesurfer from "wavesurfer.js";
 
 // Random color generator
 const randomColor = () => {
@@ -23,6 +22,19 @@ const RefactoredWaveform = ({ url = "sounds/sound3.wav" }) => {
     setAudioMaxLength
   );
 
+  useEffect(() => {
+    if (waveform.current === null) {
+      waveform.current = Wavesurfer.create({
+        container: "#waveform",
+        waveColor: "rgba(200, 0, 200, 0.2)",
+        progressColor: "rgba(100, 0, 100, 0.5)",
+        url: url,
+        width: 250,
+        // plugins: [timeline.current],
+      });
+    }
+  }, [url, waveform]);
+
   const playAudio = () => {
     if (waveform.current === null) return;
     if (waveform.current.isPlaying()) {
@@ -31,6 +43,26 @@ const RefactoredWaveform = ({ url = "sounds/sound3.wav" }) => {
       waveform.current.play();
     }
   };
+
+  useEffect(() => {
+    const processChildren = (children: HTMLCollection) => {
+      Array.from(children)
+        .filter((child) => child.querySelector("div"))
+        .forEach((child) => {
+          const canvasChildren = child.children;
+          console.log(canvasChildren);
+        });
+    };
+
+    const waveformDiv = document.getElementById("waveform");
+    if (waveformDiv) {
+      const childElement = waveformDiv.querySelector("div");
+      if (childElement && childElement.shadowRoot) {
+        const shadowRoot = childElement.shadowRoot;
+        processChildren(shadowRoot.children);
+      }
+    }
+  }, []);
 
   return (
     <div>
