@@ -69,9 +69,7 @@ const useWaveform = (
         setRegionUpdate((prev) => prev + 1);
         console.log(region.start, region.end);
       });
-      console.log(wsRegions, "wsRegions");
       const regionKeys = Object.keys(wsRegions.getRegions());
-      console.log(regionKeys, "regionKeys");
     }
 
     // const trimLeft = () => {

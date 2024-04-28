@@ -1,5 +1,6 @@
 import useWaveform from "@/hooks/useWaveForm";
-import { useState, useEffect, useRef } from "react";
+import { relative } from "path";
+import { useState, useEffect, useRef, useActionState } from "react";
 import Wavesurfer from "wavesurfer.js";
 
 // Random color generator
@@ -15,13 +16,13 @@ const RefactoredWaveform = ({ url = "sounds/sound3.wav" }) => {
   //I think I can get the length of the audio file and make a piece of state equal the it by default and then update it when the user changes it
   //That will be what is displayed to the user whenever they drag to expand or shrink the region
   const [audioMaxLength, setAudioMaxLength] = useState(0);
+  const [userAction, setUserAction] = useState(0);
   const { waveform } = useWaveform(
     url,
     randomColor,
     audioMaxLength,
     setAudioMaxLength
   );
-
   const [leftTrack, setLeftTrack] = useState("");
   useEffect(() => {
     if (waveform.current === null) {
@@ -48,25 +49,37 @@ const RefactoredWaveform = ({ url = "sounds/sound3.wav" }) => {
   useEffect(() => {
     const canvasMap = new Map();
     const regionMap = new Map();
-    const processChildren = (children: HTMLCollection) => {
+    const processChildren = (children: HTMLCollection | null) => {
+      if (!children) return;
       Array.from(children)
         .filter((child) => child.querySelector("div"))
         .forEach((child) => {
           const parentDiv = child.children;
           canvasMap.set("innerHTML", parentDiv[0].children[0]);
           regionMap.set("innerHTML", parentDiv[0].children[3]);
+          console.log(parentDiv[0].children, "region");
+          Array.from(regionMap).forEach(
+            ([key, value]: [string, HTMLElement]) => {
+              if (value) {
+                const divs = value.querySelector("div[part]");
+                const div = divs as HTMLElement;
+                if (div && div.style) {
+                  setLeftTrack(div.style.left);
+                }
+              }
+            }
+          );
         });
-      Array.from(canvasMap).forEach(([key, value]) => {
-        if (value instanceof HTMLElement) {
-          value.style.opacity = "0.5";
-        }
-      });
-      Array.from(regionMap).forEach(([key, value]) => {
-        if (value instanceof HTMLElement) {
-          const leftValue = value.style.left;
-          console.log(value.style.right, "right");
-          setLeftTrack(leftValue);
-        }
+      Array.from(canvasMap).forEach(([key, value]: [string, HTMLElement]) => {
+        console.log(value, "value");
+        const divs = value.querySelectorAll("div");
+        divs.forEach((div) => {
+          console.log(div, "div");
+        });
+        value.style.position = "relative";
+        value.style.opacity = "0.5";
+        value.style.left = leftTrack;
+        value.style.clipPath = "";
       });
     };
 
@@ -74,12 +87,11 @@ const RefactoredWaveform = ({ url = "sounds/sound3.wav" }) => {
     if (waveformDiv) {
       const childElement = waveformDiv.querySelector("div");
       if (childElement && childElement.shadowRoot) {
-        const shadowRoot = childElement.shadowRoot;
-        processChildren(shadowRoot.children);
+        processChildren(childElement.shadowRoot.children);
       }
     }
-  }, [leftTrack]);
-  console.log(leftTrack, "leftTrack");
+    setUserAction((prev) => prev + 1);
+  }, [leftTrack, userAction]);
 
   return (
     <div>
