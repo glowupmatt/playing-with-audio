@@ -8,7 +8,9 @@ const useWaveform = (
   url: string,
   randomColor: () => string,
   audioMaxLength: number,
-  setAudioMaxLength: (audioMaxLength: number) => void
+  setAudioMaxLength: (audioMaxLength: number) => void,
+  leftTrack: string,
+  setLeftTrack: (leftTrack: string) => void
 ) => {
   const timeline = useRef<TimelinePlugin | null>(null);
   const waveform = useRef<Wavesurfer | null>(null);
@@ -72,6 +74,54 @@ const useWaveform = (
       const regionKeys = Object.keys(wsRegions.getRegions());
     }
 
+    const canvasMap = new Map();
+    const regionMap = new Map();
+    const processChildren = (children: HTMLCollection | null) => {
+      if (!children) return;
+      Array.from(children)
+        .filter((child) => child.querySelector("div"))
+        .forEach((child) => {
+          const parentDiv = child.children;
+          canvasMap.set("innerHTML", parentDiv[0].children[0]);
+          regionMap.set("innerHTML", parentDiv[0].children[3]);
+          console.log(parentDiv[0].children, "region");
+          Array.from(regionMap).forEach(
+            ([key, value]: [string, HTMLElement]) => {
+              if (value) {
+                const divs = value.querySelector("div[part]");
+                const div = divs as HTMLElement;
+                if (div && div.style) {
+                  setLeftTrack(div.style.left);
+                }
+              }
+            }
+          );
+        });
+      Array.from(canvasMap).forEach(([key, value]: [string, HTMLElement]) => {
+        console.log(value, "value");
+        const divs = value.querySelectorAll("div");
+        if (divs.length === 0) return;
+        const canvas = Array.from(divs)[0].childNodes[0];
+        console.log(canvas, "divs");
+        // Array.from(divs)[0].childNodes[0].style.left = leftTrack;
+        Array.from(divs)[0].style.position = "relative";
+        Array.from(divs)[0].style.left = leftTrack;
+
+        value.style.position = "relative";
+        value.style.opacity = "0.5";
+        value.style.left = leftTrack;
+        value.style.clipPath = "";
+      });
+    };
+
+    const waveformDiv = document.getElementById("waveform");
+    if (waveformDiv) {
+      const childElement = waveformDiv.querySelector("div");
+      if (childElement && childElement.shadowRoot) {
+        processChildren(childElement.shadowRoot.children);
+      }
+    }
+
     // const trimLeft = () => {
     //   if (waveform.current && waveform.current) {
     //     // const start = wsRegions.getRegions()[Object.keys(wavesurfer.regions.list)[0]].start.toFixed(2);
@@ -94,7 +144,7 @@ const useWaveform = (
     // };
 
     // initializeTimeline();
-  }, [url, randomColor, regionUpdate]);
+  }, [url, randomColor, regionUpdate, leftTrack, setLeftTrack]);
 
   return { waveform, timeline };
 };
