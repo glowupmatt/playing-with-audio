@@ -7,14 +7,45 @@ import { Region } from "wavesurfer.js/dist/plugins/regions.esm.js";
 const useWaveform = (
   url: string,
   randomColor: () => string,
-  audioMaxLength: number,
-  setAudioMaxLength: (audioMaxLength: number) => void,
   leftTrack: string,
   setLeftTrack: (leftTrack: string) => void
 ) => {
   const timeline = useRef<TimelinePlugin | null>(null);
-  const waveform = useRef<Wavesurfer | null>(null);
+
+  const waveform = useRef<Wavesurfer>(
+    Wavesurfer.create({
+      container: "#waveform",
+      waveColor: "#46a6d8",
+      progressColor: "#FFF",
+      url: url,
+      barWidth: 3,
+      barGap: 2,
+      height: 130,
+      width: 250,
+      cursorWidth: 1,
+      cursorColor: "white",
+      normalize: true,
+    })
+  );
   const [regionUpdate, setRegionUpdate] = useState(0);
+  let wsRegions: RegionsPlugin = waveform.current.registerPlugin(
+    RegionsPlugin.create()
+  );
+
+  wsRegions = waveform.current.registerPlugin(RegionsPlugin.create());
+  waveform.current.on("decode", () => {
+    if (waveform.current)
+      wsRegions.addRegion({
+        start: 0,
+        end: waveform.current.getDuration(),
+        content: "Resize me & drag me!",
+        color: randomColor(),
+        drag: false,
+        resize: true,
+        contentEditable: true,
+      });
+  });
+  console.log(wsRegions, "wsRegions");
 
   useEffect(() => {
     // const initializeTimeline = () => {
@@ -30,21 +61,8 @@ const useWaveform = (
     //     },
     //   });
     // };
-    let wsRegions: RegionsPlugin;
-    if (waveform.current) {
-      wsRegions = waveform.current.registerPlugin(RegionsPlugin.create());
-      waveform.current.on("decode", () => {
-        if (waveform.current)
-          wsRegions.addRegion({
-            start: 0,
-            end: waveform.current.getDuration(),
-            content: "Resize me & drag me!",
-            color: randomColor(),
-            drag: false,
-            resize: true,
-          });
-      });
 
+    if (wsRegions) {
       let activeRegion: Region;
       wsRegions.on("region-in", (region) => {
         activeRegion = region;
@@ -67,7 +85,6 @@ const useWaveform = (
       });
 
       wsRegions.on("region-updated", (region) => {
-        if (waveform.current) waveform.current.zoom(region.end - region.start);
         setRegionUpdate((prev) => prev + 1);
         console.log(region.start, region.end);
       });
@@ -76,51 +93,51 @@ const useWaveform = (
 
     const canvasMap = new Map();
     const regionMap = new Map();
-    const processChildren = (children: HTMLCollection | null) => {
-      if (!children) return;
-      Array.from(children)
-        .filter((child) => child.querySelector("div"))
-        .forEach((child) => {
-          const parentDiv = child.children;
-          canvasMap.set("innerHTML", parentDiv[0].children[0]);
-          regionMap.set("innerHTML", parentDiv[0].children[3]);
-          console.log(parentDiv[0].children, "region");
-          Array.from(regionMap).forEach(
-            ([key, value]: [string, HTMLElement]) => {
-              if (value) {
-                const divs = value.querySelector("div[part]");
-                const div = divs as HTMLElement;
-                if (div && div.style) {
-                  setLeftTrack(div.style.left);
-                }
-              }
-            }
-          );
-        });
-      Array.from(canvasMap).forEach(([key, value]: [string, HTMLElement]) => {
-        console.log(value, "value");
-        const divs = value.querySelectorAll("div");
-        if (divs.length === 0) return;
-        const canvas = Array.from(divs)[0].childNodes[0];
-        console.log(canvas, "divs");
-        // Array.from(divs)[0].childNodes[0].style.left = leftTrack;
-        Array.from(divs)[0].style.position = "relative";
-        Array.from(divs)[0].style.left = leftTrack;
+    // const processChildren = (children: HTMLCollection | null) => {
+    //   if (!children) return;
+    //   Array.from(children)
+    //     .filter((child) => child.querySelector("div"))
+    //     .forEach((child) => {
+    //       const parentDiv = child.children;
+    //       canvasMap.set("innerHTML", parentDiv[0].children[0]);
+    //       regionMap.set("innerHTML", parentDiv[0].children[3]);
+    //       console.log(parentDiv[0].children, "region");
+    //       Array.from(regionMap).forEach(
+    //         ([key, value]: [string, HTMLElement]) => {
+    //           if (value) {
+    //             const divs = value.querySelector("div[part]");
+    //             const div = divs as HTMLElement;
+    //             if (div && div.style) {
+    //               setLeftTrack(div.style.left);
+    //             }
+    //           }
+    //         }
+    //       );
+    //     });
+    //   Array.from(canvasMap).forEach(([key, value]: [string, HTMLElement]) => {
+    //     console.log(value, "value");
+    //     const divs = value.querySelectorAll("div");
+    //     if (divs.length === 0) return;
+    //     const canvas = Array.from(divs)[0].childNodes[0];
+    //     console.log(canvas, "divs");
+    //     // Array.from(divs)[0].childNodes[0].style.left = leftTrack;
+    //     Array.from(divs)[0].style.position = "relative";
+    //     Array.from(divs)[0].style.left = leftTrack;
 
-        value.style.position = "relative";
-        value.style.opacity = "0.5";
-        value.style.left = leftTrack;
-        value.style.clipPath = "";
-      });
-    };
+    //     value.style.position = "relative";
+    //     value.style.opacity = "0.5";
+    //     value.style.left = leftTrack;
+    //     value.style.clipPath = "";
+    //   });
+    // };
 
-    const waveformDiv = document.getElementById("waveform");
-    if (waveformDiv) {
-      const childElement = waveformDiv.querySelector("div");
-      if (childElement && childElement.shadowRoot) {
-        processChildren(childElement.shadowRoot.children);
-      }
-    }
+    // const waveformDiv = document.getElementById("waveform");
+    // if (waveformDiv) {
+    //   const childElement = waveformDiv.querySelector("div");
+    //   if (childElement && childElement.shadowRoot) {
+    //     processChildren(childElement.shadowRoot.children);
+    //   }
+    // }
 
     // const trimLeft = () => {
     //   if (waveform.current && waveform.current) {
@@ -144,7 +161,7 @@ const useWaveform = (
     // };
 
     // initializeTimeline();
-  }, [url, randomColor, regionUpdate, leftTrack, setLeftTrack]);
+  }, [url, randomColor, regionUpdate, leftTrack, setLeftTrack, wsRegions]);
 
   return { waveform, timeline };
 };

@@ -9,8 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/audiobuffer-to-wav": "^1.0.4",
     "@types/howler": "^2.2.11",
     "@types/wavesurfer.js": "^6.0.12",
+    "audiobuffer-to-wav": "^1.0.0",
     "audiosprite": "^0.7.2",
     "howler": "^2.2.4",
     "next": "14.2.2",
