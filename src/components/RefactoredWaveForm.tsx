@@ -25,6 +25,7 @@ const RefactoredWaveform = () => {
   const [audioMaxLength, setAudioMaxLength] = useState(0);
   const [leftTrack, setLeftTrack] = useState("");
   const [userAction, setUserAction] = useState(0);
+  const [region, setRegion] = useState<Region | null>(null);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   useEffect(() => {
     if (waveform.current === null) {
@@ -70,6 +71,7 @@ const RefactoredWaveform = () => {
         setUserAction((prev) => prev + 1);
         console.log(region.start, region.end);
         const regions: SingleRegion = wsRegions.getRegions()[0];
+        setRegion(regions);
         const start = regions.start.toFixed(2);
         const end = regions.end.toFixed(2);
         const currentTime = waveform.current?.getCurrentTime();
@@ -133,7 +135,6 @@ const RefactoredWaveform = () => {
         }
 
         console.log(start, end, "regions");
-        console.log(waveform.current?.getWrapper(), "wrapper");
       });
     }
   }, [url, waveform, userAction, audio]);
@@ -163,7 +164,19 @@ const RefactoredWaveform = () => {
     if (parentElement) {
       parentElement.appendChild(currentDiv);
     }
-  }, [audio]);
+    const file = waveform.current?.getWrapper();
+    console.log(region, "region");
+    const regionId = region?.id;
+    if (file && regionId) {
+      const regionElement = file.querySelector(
+        `div[part="region ${regionId}"]`
+      );
+      if (regionElement && regionElement.parentNode) {
+        regionElement.parentNode.removeChild(regionElement);
+      }
+      console.log(regionElement, "regionElement");
+    }
+  }, [audio, region, waveform]);
 
   // useEffect(() => {
   //   const canvasMap = new Map();
